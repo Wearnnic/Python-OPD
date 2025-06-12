@@ -1,0 +1,72 @@
+import requests
+from bs4 import BeautifulSoup
+from openpyxl import Workbook
+
+def parse_vacancies(url, pages=3):
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    vacancies = []
+
+    for page in range(pages):
+        params = {'page': page}
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Основной контейнер вакансии
+        vacancy_cards = soup.select('div.vacancy-card--n77Dj8TY8VIUF0yM')
+        if not vacancy_cards:
+            break
+
+        for card in vacancy_cards:
+            # Название вакансии и ссылка
+            title_tag = card.select_one('span.vacancy-name-wrapper--PSD41i3dJDUNb5Tr a')
+            title = title_tag.text.strip() if title_tag else ''
+            link = title_tag['href'] if title_tag and title_tag.has_attr('href') else ''
+
+            # Компания
+            company_tag = card.select_one('div.vacancy-serp-item-body__logo_magritte span[data-qa="vacancy-serp__vacancy-employer-logo"]')
+            company = company_tag.text.strip() if company_tag else ''
+
+            # Логотип компании
+            logo_tag = card.select_one('div.vacancy-serp-item-body__logo_magritte img')
+            logo_url = logo_tag['src'] if logo_tag and logo_tag.has_attr('src') else ''
+
+            # Зарплата
+            salary_tag = card.select_one('div.compensation-labels--vwum2s12fQUurc2J')
+            salary = salary_tag.text.strip() if salary_tag else 'Не указана'
+
+            # Адрес
+            address_tag = card.select_one('span[data-qa="vacancy-serp__vacancy-address"]')
+            address = address_tag.text.strip() if address_tag else ''
+
+            # Добавляем данные в список
+            vacancies.append({
+                'Название': title,
+                'Компания': company,
+                'Логотип': logo_url,
+                'Зарплата': salary,
+                'Адрес': address,
+                'Ссылка': link
+            })
+
+    return vacancies
+
+def save_to_excel(vacancies, filename='vacancies.xlsx'):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Вакансии hh.ru"
+    # Обновлённые заголовки для Excel
+    headers = ['Название', 'Компания', 'Логотип', 'Зарплата', 'Адрес', 'Ссылка']
+    ws.append(headers)
+
+    for vac in vacancies:
+        # Убедимся, что данные добавляются в том же порядке, что и заголовки
+        ws.append([vac[h] for h in headers])
+
+    wb.save(filename)
+    print(f'Данные сохранены в файл {filename}')
+
+if __name__ == '__main__':
+    url = 'https://omsk.hh.ru/search/vacancy?text=Python&salary=&ored_clusters=true&order_by=publication_time&area=68&hhtmFrom=vacancy_search_list&hhtmFromLabel=vacancy_search_line'
+    vacancies = parse_vacancies(url, pages=5)
+    save_to_excel(vacancies)
