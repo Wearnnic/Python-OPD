@@ -21,12 +21,6 @@ def parse_vacancies(url, pages=3):
             title = title_tag.text.strip() if title_tag else ''
             link = title_tag['href'] if title_tag and title_tag.has_attr('href') else ''
 
-            company_tag = card.select_one('div.vacancy-serp-item-body__logo_magritte span[data-qa="vacancy-serp__vacancy-employer-logo"]')
-            company = company_tag.text.strip() if company_tag else ''
-
-            logo_tag = card.select_one('div.vacancy-serp-item-body__logo_magritte img')
-            logo_url = logo_tag['src'] if logo_tag and logo_tag.has_attr('src') else ''
-
             salary_tag = card.select_one('div.compensation-labels--vwum2s12fQUurc2J')
             salary = salary_tag.text.strip() if salary_tag else 'Не указана'
 
@@ -35,8 +29,6 @@ def parse_vacancies(url, pages=3):
 
             vacancies.append({
                 'Название': title,
-                'Компания': company,
-                'Логотип': logo_url,
                 'Зарплата': salary,
                 'Адрес': address,
                 'Ссылка': link
@@ -48,7 +40,7 @@ def save_to_excel(vacancies, filename='vacancies.xlsx'):
     wb = Workbook()
     ws = wb.active
     ws.title = "Вакансии hh.ru"
-    headers = ['Название', 'Компания', 'Логотип', 'Зарплата', 'Адрес', 'Ссылка']
+    headers = ['Название', 'Зарплата', 'Адрес', 'Ссылка']
     ws.append(headers)
 
     for vac in vacancies:
