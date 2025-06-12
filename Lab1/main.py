@@ -51,5 +51,5 @@ def save_to_excel(vacancies, filename='vacancies.xlsx'):
 
 if __name__ == '__main__':
     url = 'https://omsk.hh.ru/search/vacancy?text=Python&salary=&ored_clusters=true&order_by=publication_time&area=68&hhtmFrom=vacancy_search_list&hhtmFromLabel=vacancy_search_line'
-    vacancies = parse_vacancies(url, pages=5)
+    vacancies = parse_vacancies(url, pages=1)
     save_to_excel(vacancies)
